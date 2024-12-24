@@ -1,0 +1,43 @@
+on:
+  workflow_dispatch:
+    inputs:
+      runson:
+        description: "Runs on machine"
+        required: true
+        type: string
+        default: ubuntu-latest
+
+env: {}
+
+jobs:
+  # Label of the runner job
+  runner-job:
+    runs-on: ${{ inputs.runson }}
+    steps:
+      - name: Printenv
+        run: |
+          printenv | sort
+      - name: Print arch
+        run: |
+          uname -m
+      - name: Debug
+        run: |
+          df -h
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir prime-numbers
+          cd prime-numbers
+          touch 2.txt
+      - name: Cache Primes
+        id: cache-primes
+        uses: WarpBuilds/cache@v1
+        with:
+          path: prime-numbers
+          key: ${{ runner.os }}-primes
+      - name: Output github vars
+        env:
+          GITHUB_REPOSITORY: WarpBuilds/backend-cache
+          GITHUB_RUN_ID: 234567890
+        run: |
+          echo "GITHUB_REPOSITORY: ${{github.repository}}"
+          echo "GITHUB_RUN_ID: ${{github.run_id}}"
