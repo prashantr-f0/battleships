@@ -5,7 +5,7 @@ Welcome to another JavaScript Game walkthrough! In this game, we learn not only 
 
 Watch the full video here: https://youtu.be/U64vIhh0TyM
 
-
+# Modifies readme
 
 In this walkthrough we will:
 - make 5 draggable ships
