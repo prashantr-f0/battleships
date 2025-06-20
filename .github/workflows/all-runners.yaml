@@ -36,7 +36,7 @@ on:
 jobs:
   generate_runner_labels:
     name: Generate labels for ${{ inputs.warp_env }}
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - id: generate_runner_labels
