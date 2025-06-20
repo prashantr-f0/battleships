@@ -1,0 +1,72 @@
+name: All Runners
+run-name: Run on all ${{ inputs.warp_env }} runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      warp_env:
+        description: "Environment"
+        required: true
+        type: choice
+        default: warpbuild-1
+        options:
+          - warpbuild-1
+          - warpbuild-prod
+      run_ubuntu:
+        description: "Ubuntu Runners"
+        required: true
+        type: boolean
+        default: true
+      run_macos:
+        description: "macOS Runners"
+        required: true
+        type: boolean
+        default: true
+      run_windows:
+        description: "Windows Runners"
+        required: true
+        type: boolean
+        default: true
+      cmd:
+        description: What to run?
+        default: sleep 20 && echo 'hi'
+        required: true
+        type: string
+
+jobs:
+  generate_runner_labels:
+    name: Generate labels for ${{ inputs.warp_env }}
+    runs-on: warp-ubuntu-latest-x64-2x
+    steps:
+      - uses: actions/checkout@v4
+      - id: generate_runner_labels
+        env:
+          WARP_ENV: ${{ inputs.warp_env }}
+          RUN_UBUNTU: ${{ inputs.run_ubuntu }}
+          RUN_MACOS: ${{ inputs.run_macos }}
+          RUN_WINDOWS: ${{ inputs.run_windows }}
+        working-directory: .github/workflows
+        run: |
+          runner_labels=$(bash generate-runner-labels.sh)
+          echo "runner_labels=${runner_labels}" >> $GITHUB_OUTPUT
+    outputs:
+      runner_labels: ${{ steps.generate_runner_labels.outputs.runner_labels }}
+
+  run:
+    needs: generate_runner_labels
+    strategy:
+      matrix:
+        runner: ${{ fromJson(needs.generate_runner_labels.outputs.runner_labels) }}
+      fail-fast: false
+    name: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - shell: bash
+        run: |
+          bash -c '${{ inputs.cmd }}' | tee temp_warp_output
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          # Loop through each line of the output and add it to the summary
+          while IFS= read -r line; do
+            echo "$line" >> $GITHUB_STEP_SUMMARY
+          done < temp_warp_output
+          echo '```' >> $GITHUB_STEP_SUMMARY
